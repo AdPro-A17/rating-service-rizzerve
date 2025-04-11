@@ -1,6 +1,6 @@
 package id.ac.ui.cs.advprog.rating_service.model;
 
-public class RatingModel {
+public class Rating {
     private String id;
     private String userId;
     private String menuId;
