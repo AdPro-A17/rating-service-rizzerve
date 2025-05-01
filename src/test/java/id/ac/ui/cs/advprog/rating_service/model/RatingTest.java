@@ -1,5 +1,4 @@
 package id.ac.ui.cs.advprog.rating_service.model;
-import id.ac.ui.cs.advprog.rating_service.model.Rating;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -26,6 +25,7 @@ class RatingTest {
         rating.setValue(4); // valid default
     }
 
+    // Happy Path: Verifikasi bahwa ID dan nilai yang diberikan sesuai
     @Test
     void testSetAndGetRatingId() {
         assertEquals(ratingId, rating.getRatingId(), "Rating ID should match the assigned UUID");
@@ -46,10 +46,11 @@ class RatingTest {
         assertEquals(4, rating.getValue(), "Rating value should be 4");
     }
 
+    // Unhappy Path: Cek apabila rating berada di luar rentang yang valid
     @Test
     void testSetInvalidLowValue() {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            rating.setValue(0);
+            rating.setValue(0); // Nilai di bawah batas minimum
         });
         assertEquals("Rating value must be between 1 and 5", exception.getMessage());
     }
@@ -57,15 +58,16 @@ class RatingTest {
     @Test
     void testSetInvalidHighValue() {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            rating.setValue(6);
+            rating.setValue(6); // Nilai di atas batas maksimum
         });
         assertEquals("Rating value must be between 1 and 5", exception.getMessage());
     }
 
+    // Unhappy Path: Cek apabila userId atau itemId bernilai null
     @Test
     void testSetNullUserId() {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            rating.setUserId(null);
+            rating.setUserId(null); // userId tidak boleh null
         });
         assertEquals("User ID cannot be null", exception.getMessage());
     }
@@ -73,7 +75,7 @@ class RatingTest {
     @Test
     void testSetNullItemId() {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            rating.setItemId(null);
+            rating.setItemId(null); // itemId tidak boleh null
         });
         assertEquals("Item ID cannot be null", exception.getMessage());
     }

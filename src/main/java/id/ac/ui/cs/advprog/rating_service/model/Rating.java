@@ -1,41 +1,52 @@
 package id.ac.ui.cs.advprog.rating_service.model;
 
+import java.util.UUID;
+
 public class Rating {
-    private String id;
-    private String userId;
-    private String menuId;
-    private int score;
+    private UUID ratingId;
+    private UUID userId;
+    private UUID itemId;
+    private int value;
 
-    public String getId() {
-        return id;
+    // Getter dan Setter
+    public UUID getRatingId() {
+        return ratingId;
     }
 
-    public void setId(String id) {
-        this.id = id;
+    public void setRatingId(UUID ratingId) {
+        this.ratingId = ratingId;
     }
 
-    public String getUserId() {
+    public UUID getUserId() {
         return userId;
     }
 
-    public void setUserId(String userId) {
+    public void setUserId(UUID userId) {
+        if (userId == null) {
+            throw new IllegalArgumentException("User ID cannot be null");
+        }
         this.userId = userId;
     }
 
-    public String getMenuId() {
-        return menuId;
+    public UUID getItemId() {
+        return itemId;
     }
 
-    public void setMenuId(String menuId) {
-        this.menuId = menuId;
+    public void setItemId(UUID itemId) {
+        if (itemId == null) {
+            throw new IllegalArgumentException("Item ID cannot be null");
+        }
+        this.itemId = itemId;
     }
 
-    public int getScore() {
-        return score;
+    public int getValue() {
+        return value;
     }
 
-    public void setScore(int score) {
-        this.score = score;
+    public void setValue(int value) {
+        if (value < 1 || value > 5) {
+            throw new IllegalArgumentException("Rating value must be between 1 and 5");
+        }
+        this.value = value;
     }
 }
-

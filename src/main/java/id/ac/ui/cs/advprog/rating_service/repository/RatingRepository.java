@@ -7,25 +7,25 @@ import java.util.*;
 
 @Repository
 public class RatingRepository {
-    private final Map<String, Rating> ratingStorage = new HashMap<>();
+    private final Map<UUID, Rating> ratingStorage = new HashMap<>();
 
-    public Rating create(Rating rating) {
-        String id = UUID.randomUUID().toString();
-        rating.setId(id);
-        ratingStorage.put(id, rating);
+    public Rating save(Rating rating) {
+        if (rating == null || rating.getRatingId() == null) {
+            throw new IllegalArgumentException("Rating or Rating ID cannot be null");
+        }
+        ratingStorage.put(rating.getRatingId(), rating);
         return rating;
+    }
+
+    public Optional<Rating> findById(UUID id) {
+        return Optional.ofNullable(ratingStorage.get(id));
     }
 
     public List<Rating> findAll() {
         return new ArrayList<>(ratingStorage.values());
     }
 
-    public Rating update(Rating rating) {
-        ratingStorage.put(rating.getId(), rating);
-        return rating;
-    }
-
-    public void delete(String id) {
+    public void delete(UUID id) {
         ratingStorage.remove(id);
     }
 }
