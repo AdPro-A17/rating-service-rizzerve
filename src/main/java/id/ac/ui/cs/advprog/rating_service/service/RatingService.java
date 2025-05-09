@@ -4,11 +4,12 @@ import id.ac.ui.cs.advprog.rating_service.model.Rating;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 public interface RatingService {
-    Rating addRating(Rating rating);
-    Optional<Rating> getRatingById(String id);
-    void deleteRatingById(String id);
-    List<Rating> getRatingsByItemId(String itemId);
+    Rating save(Rating rating); // Sesuaikan dengan repository
+    List<Rating> findAll(); // Sesuaikan dengan repository
+    Optional<Rating> findById(UUID ratingId); // Sesuaikan dengan repository
+    Rating update(Rating rating); // Sesuaikan dengan repository (kita bisa menambahkan method ini jika perlu)
+    void deleteById(UUID ratingId); // Sesuaikan dengan repository
 }
-
