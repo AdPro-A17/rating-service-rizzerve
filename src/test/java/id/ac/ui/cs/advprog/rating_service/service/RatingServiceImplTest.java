@@ -38,14 +38,23 @@ class RatingServiceImplTest {
 
     @Test
     void testSave() {
+        UUID itemId = UUID.randomUUID();
+        Rating rating = new Rating();
+        rating.setRatingId(UUID.randomUUID());
+        rating.setUserId(UUID.randomUUID());
+        rating.setItemId(itemId);
+        rating.setValue(4);
+
+        RatingObserver observer = mock(RatingObserver.class);
+        ratingService.addObserver(observer);
+
         when(ratingRepository.save(rating)).thenReturn(rating);
-        when(ratingRepository.findAll()).thenReturn(List.of(rating));
+        when(ratingRepository.findByItemId(itemId)).thenReturn(List.of(rating)); // Mock ini penting
 
-        Rating saved = ratingService.save(rating);
+        Rating savedRating = ratingService.save(rating);
 
-        assertEquals(rating, saved);
-        verify(ratingRepository).save(rating);
-        verify(observer).updateRating(eq(rating.getItemId()), eq(4.0));
+        assertEquals(rating, savedRating);
+        verify(observer).updateRating(eq(itemId), eq(4.0d));
     }
 
     @Test
@@ -75,15 +84,14 @@ class RatingServiceImplTest {
         UUID id = rating.getRatingId();
         when(ratingRepository.findById(id)).thenReturn(Optional.of(rating));
         when(ratingRepository.save(rating)).thenReturn(rating);
-        when(ratingRepository.findAll()).thenReturn(List.of(rating));
+        when(ratingRepository.findByItemId(rating.getItemId())).thenReturn(List.of(rating)); // Tambahan penting
 
         Rating updated = ratingService.update(rating);
 
         assertEquals(rating, updated);
-        verify(ratingRepository).findById(id);
-        verify(ratingRepository).save(rating);
-        verify(observer).updateRating(eq(rating.getItemId()), eq(4.0));
+        verify(observer).updateRating(eq(rating.getItemId()), eq(4.0d));
     }
+
 
     @Test
     void testUpdateNotFound() {

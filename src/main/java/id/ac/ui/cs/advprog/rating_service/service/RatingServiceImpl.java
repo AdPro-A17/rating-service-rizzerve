@@ -26,7 +26,10 @@ public class RatingServiceImpl implements RatingService {
 
     private void notifyObservers(UUID itemId) {
         List<Rating> ratings = findByItemId(itemId);
-        double avg = ratings.stream().mapToInt(Rating::getValue).average().orElse(0.0);
+        double avg = ratings.stream()
+                .mapToInt(Rating::getValue)
+                .average()
+                .orElse(0.0); // Return 0.0 if no ratings are found
         for (RatingObserver observer : observers) {
             observer.updateRating(itemId, avg);
         }
