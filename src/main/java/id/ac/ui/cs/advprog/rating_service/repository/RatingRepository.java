@@ -28,4 +28,11 @@ public class RatingRepository {
     public void delete(UUID id) {
         ratingStorage.remove(id);
     }
+
+    public List<Rating> findByItemId(UUID itemId) {
+        return ratingStorage.values().stream()
+                .filter(r -> r.getItemId().equals(itemId))
+                .toList();
+    }
+
 }

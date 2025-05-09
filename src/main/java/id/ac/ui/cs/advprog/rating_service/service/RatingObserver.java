@@ -1,5 +1,8 @@
 package id.ac.ui.cs.advprog.rating_service.service;
 
+import java.util.UUID;
+
 public interface RatingObserver {
-    void updateAverageRating(String itemId, double newAverageRating);
+    void updateRating(UUID itemId, double averageRating);
 }
+

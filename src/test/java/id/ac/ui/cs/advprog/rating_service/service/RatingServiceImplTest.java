@@ -4,9 +4,7 @@ import id.ac.ui.cs.advprog.rating_service.model.Rating;
 import id.ac.ui.cs.advprog.rating_service.repository.RatingRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.*;
 
 import java.util.*;
 
@@ -21,110 +19,119 @@ class RatingServiceImplTest {
     @Mock
     private RatingRepository ratingRepository;
 
+    @Mock
+    private RatingObserver observer;
+
     private Rating rating;
 
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);  // Initialize mocks
-
+        MockitoAnnotations.openMocks(this);
         rating = new Rating();
         rating.setRatingId(UUID.randomUUID());
         rating.setUserId(UUID.randomUUID());
         rating.setItemId(UUID.randomUUID());
         rating.setValue(4);
+
+        ratingService.addObserver(observer); // daftarkan observer ke service
     }
 
     @Test
     void testSave() {
-        // Mock the save method in the repository
         when(ratingRepository.save(rating)).thenReturn(rating);
+        when(ratingRepository.findAll()).thenReturn(List.of(rating));
 
-        // Call the service method
-        Rating savedRating = ratingService.save(rating);
+        Rating saved = ratingService.save(rating);
 
-        // Assert the saved rating is the same as the one returned by the repository
-        assertEquals(rating, savedRating);
-        verify(ratingRepository).save(rating); // Verify that save method was called
+        assertEquals(rating, saved);
+        verify(ratingRepository).save(rating);
+        verify(observer).updateRating(eq(rating.getItemId()), eq(4.0));
     }
 
     @Test
     void testFindAll() {
-        // Create a list of ratings
-        List<Rating> ratings = new ArrayList<>();
-        ratings.add(rating);
+        when(ratingRepository.findAll()).thenReturn(List.of(rating));
 
-        // Mock the repository method to return the list
-        when(ratingRepository.findAll()).thenReturn(ratings);
+        List<Rating> result = ratingService.findAll();
 
-        // Call the service method
-        List<Rating> allRatings = ratingService.findAll();
-
-        // Assert the result is a List containing the single rating
-        assertNotNull(allRatings);
-        assertEquals(1, allRatings.size());
-        assertEquals(rating, allRatings.get(0));
-        verify(ratingRepository).findAll();  // Verify that findAll method was called
+        assertEquals(1, result.size());
+        assertEquals(rating, result.get(0));
+        verify(ratingRepository).findAll();
     }
 
     @Test
     void testFindById() {
-        UUID ratingId = rating.getRatingId();
+        UUID id = rating.getRatingId();
+        when(ratingRepository.findById(id)).thenReturn(Optional.of(rating));
 
-        // Mock the repository to return the rating when finding by ID
-        when(ratingRepository.findById(ratingId)).thenReturn(Optional.of(rating));
+        Optional<Rating> result = ratingService.findById(id);
 
-        // Call the service method
-        Optional<Rating> foundRating = ratingService.findById(ratingId);
-
-        // Assert that the found rating is present and matches the expected rating
-        assertTrue(foundRating.isPresent());
-        assertEquals(rating, foundRating.get());
-        verify(ratingRepository).findById(ratingId); // Verify that findById method was called
+        assertTrue(result.isPresent());
+        assertEquals(rating, result.get());
     }
 
     @Test
     void testUpdate() {
-        // Mock the repository method to return the rating when finding by ID
-        UUID ratingId = rating.getRatingId();
-        when(ratingRepository.findById(ratingId)).thenReturn(Optional.of(rating));
+        UUID id = rating.getRatingId();
+        when(ratingRepository.findById(id)).thenReturn(Optional.of(rating));
         when(ratingRepository.save(rating)).thenReturn(rating);
+        when(ratingRepository.findAll()).thenReturn(List.of(rating));
 
-        // Call the service method
-        Rating updatedRating = ratingService.update(rating);
+        Rating updated = ratingService.update(rating);
 
-        // Assert that the updated rating is the same as the one returned by the repository
-        assertEquals(rating, updatedRating);
-        verify(ratingRepository).findById(ratingId); // Verify that findById method was called
-        verify(ratingRepository).save(rating);      // Verify that save method was called
+        assertEquals(rating, updated);
+        verify(ratingRepository).findById(id);
+        verify(ratingRepository).save(rating);
+        verify(observer).updateRating(eq(rating.getItemId()), eq(4.0));
     }
 
     @Test
     void testUpdateNotFound() {
-        // Mock the repository to return empty when looking for the rating by ID
-        when(ratingRepository.findById(rating.getRatingId())).thenReturn(Optional.empty());
+        UUID id = rating.getRatingId();
+        when(ratingRepository.findById(id)).thenReturn(Optional.empty());
 
-        // Call the service method and assert that an exception is thrown
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            ratingService.update(rating);
-        });
-
-        // Assert the exception message
-        assertEquals("Rating not found", exception.getMessage());
-        verify(ratingRepository).findById(rating.getRatingId()); // Verify that findById method was called
-        verify(ratingRepository, never()).save(rating);        // Ensure save was never called
+        Exception ex = assertThrows(IllegalArgumentException.class, () -> ratingService.update(rating));
+        assertEquals("Rating not found", ex.getMessage());
+        verify(ratingRepository).findById(id);
+        verify(ratingRepository, never()).save(any());
     }
 
     @Test
     void testDeleteById() {
-        UUID ratingId = UUID.randomUUID();
+        UUID id = rating.getRatingId();
+        when(ratingRepository.findById(id)).thenReturn(Optional.of(rating));
+        when(ratingRepository.findAll()).thenReturn(List.of()); // setelah delete, rating kosong
 
-        // Mock the delete method to do nothing when called
-        doNothing().when(ratingRepository).delete(ratingId);
+        ratingService.deleteById(id);
 
-        // Call the service method
-        ratingService.deleteById(ratingId);
+        verify(ratingRepository).delete(id);
+        verify(observer).updateRating(eq(rating.getItemId()), eq(0.0));
+    }
 
-        // Verify that delete method was called
-        verify(ratingRepository).delete(ratingId);
+    @Test
+    void testDeleteNotFound() {
+        UUID id = rating.getRatingId();
+        when(ratingRepository.findById(id)).thenReturn(Optional.empty());
+
+        Exception ex = assertThrows(IllegalArgumentException.class, () -> ratingService.deleteById(id));
+        assertEquals("Rating not found", ex.getMessage());
+
+        verify(ratingRepository).findById(id);
+        verify(ratingRepository, never()).delete(any());
+        verify(observer, never()).updateRating(any(), anyDouble());
+    }
+
+    @Test
+    void testFindByItemId() {
+        UUID itemId = rating.getItemId();
+        List<Rating> ratings = List.of(rating);
+
+        when(ratingRepository.findByItemId(itemId)).thenReturn(ratings);
+
+        List<Rating> found = ratingService.findByItemId(itemId);
+
+        assertEquals(1, found.size());
+        assertEquals(rating, found.get(0));
+        verify(ratingRepository).findByItemId(itemId);
     }
 }

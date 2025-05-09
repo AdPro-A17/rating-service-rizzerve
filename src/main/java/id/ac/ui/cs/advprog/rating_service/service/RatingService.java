@@ -12,4 +12,6 @@ public interface RatingService {
     Optional<Rating> findById(UUID ratingId); // Sesuaikan dengan repository
     Rating update(Rating rating); // Sesuaikan dengan repository (kita bisa menambahkan method ini jika perlu)
     void deleteById(UUID ratingId); // Sesuaikan dengan repository
+    List<Rating> findByItemId(UUID itemId);
+
 }

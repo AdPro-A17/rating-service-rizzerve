@@ -71,5 +71,11 @@ public class RatingServiceImpl implements RatingService {
             throw new IllegalArgumentException("Rating not found");
         }
     }
-    
+
+    @Override
+    public List<Rating> findByItemId(UUID itemId) {
+        return ratingRepository.findByItemId(itemId);
+    }
+
+
 }
