@@ -35,20 +35,20 @@ class RatingControllerTest {
     // Happy Path: Membuat rating baru
     @Test
     void testCreateRatingSuccessfully() {
-        when(ratingService.createRating(any(Rating.class))).thenReturn(sampleRating);
+        when(ratingService.save(any(Rating.class))).thenReturn(sampleRating); // Sesuaikan dengan method save()
 
         ResponseEntity<Rating> response = controller.createRating(sampleRating);
 
         assertEquals(200, response.getStatusCodeValue(), "Response status should be 200 OK");
         assertEquals(sampleRating, response.getBody(), "Returned rating should match the sample");
-        verify(ratingService, times(1)).createRating(sampleRating);
+        verify(ratingService, times(1)).save(sampleRating); // Sesuaikan dengan method save()
     }
 
     // Happy Path: Mendapatkan semua rating
     @Test
     void testGetAllRatingsSuccessfully() {
         List<Rating> mockList = List.of(sampleRating);
-        when(ratingService.getAllRatings()).thenReturn(mockList);
+        when(ratingService.findAll()).thenReturn(mockList); // Sesuaikan dengan method findAll()
 
         ResponseEntity<List<Rating>> response = controller.getAllRatings();
 
@@ -64,7 +64,7 @@ class RatingControllerTest {
         ResponseEntity<Void> response = controller.deleteRating(ratingId);
 
         assertEquals(204, response.getStatusCodeValue(), "Response status should be 204 No Content");
-        verify(ratingService, times(1)).deleteRating(ratingId);
+        verify(ratingService, times(1)).deleteById(ratingId); // Sesuaikan dengan method deleteById()
     }
 
     // Unhappy Path: Coba buat rating null
