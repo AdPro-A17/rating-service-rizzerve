@@ -1,10 +1,11 @@
 package id.ac.ui.cs.advprog.rating_service.service;
 
 import java.util.List;
+import java.util.UUID;
 
 public interface RatingSubject {
     void addObserver(RatingObserver observer);
     void removeObserver(RatingObserver observer);
-    void notifyObservers(String itemId, double newAverageRating);
+    void notifyObservers(UUID itemId);
 }
 

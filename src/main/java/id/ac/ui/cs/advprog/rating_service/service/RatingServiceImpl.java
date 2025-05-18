@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 import java.util.*;
 
 @Service
-public class RatingServiceImpl implements RatingService {
+public class RatingServiceImpl implements RatingService, RatingSubject {
 
     private final RatingRepository ratingRepository;
     private final List<RatingObserver> observers = new ArrayList<>();
@@ -16,15 +16,18 @@ public class RatingServiceImpl implements RatingService {
         this.ratingRepository = ratingRepository;
     }
 
+    @Override
     public void addObserver(RatingObserver observer) {
         observers.add(observer);
     }
 
+    @Override
     public void removeObserver(RatingObserver observer) {
         observers.remove(observer);
     }
 
-    private void notifyObservers(UUID itemId) {
+    @Override
+    public void notifyObservers(UUID itemId) {
         List<Rating> ratings = findByItemId(itemId);
         double avg = ratings.stream()
                 .mapToInt(Rating::getValue)
