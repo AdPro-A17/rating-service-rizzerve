@@ -1,46 +1,44 @@
 package id.ac.ui.cs.advprog.rating_service.model;
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.UUID;
 
+@Getter
+@Setter
+@Entity
+@Table(name = "ratings")
 public class Rating {
-    private UUID ratingId;
-    private UUID userId;
-    private UUID itemId;
-    private int value;
 
     // Getter dan Setter
-    public UUID getRatingId() {
-        return ratingId;
-    }
+    @Id
+    @Column(name = "rating_id", nullable = false, updatable = false)
+    private UUID ratingId;
+
+    @Column(name = "user_id", nullable = false)
+    private UUID userId;
+
+    @Column(name = "item_id", nullable = false)
+    private UUID itemId;
+
+    @Column(name = "rating_value", nullable = false)
+    private int value;
 
     public void setRatingId(UUID ratingId) {
         this.ratingId = ratingId;
     }
 
-    public UUID getUserId() {
-        return userId;
-    }
-
     public void setUserId(UUID userId) {
-        if (userId == null) {
-            throw new IllegalArgumentException("User ID cannot be null");
-        }
+        if (userId == null) throw new IllegalArgumentException("User ID cannot be null");
         this.userId = userId;
     }
 
-    public UUID getItemId() {
-        return itemId;
-    }
-
     public void setItemId(UUID itemId) {
-        if (itemId == null) {
-            throw new IllegalArgumentException("Item ID cannot be null");
-        }
+        if (itemId == null) throw new IllegalArgumentException("Item ID cannot be null");
         this.itemId = itemId;
-    }
-
-    public int getValue() {
-        return value;
     }
 
     public void setValue(int value) {

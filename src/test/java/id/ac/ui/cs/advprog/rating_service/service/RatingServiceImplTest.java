@@ -112,7 +112,7 @@ class RatingServiceImplTest {
 
         ratingService.deleteById(id);
 
-        verify(ratingRepository).delete(id);
+        verify(ratingRepository).deleteById(id);
         verify(observer).updateRating(eq(rating.getItemId()), eq(0.0));
     }
 

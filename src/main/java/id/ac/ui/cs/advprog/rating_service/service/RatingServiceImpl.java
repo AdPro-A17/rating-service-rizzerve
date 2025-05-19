@@ -71,7 +71,7 @@ public class RatingServiceImpl implements RatingService, RatingSubject {
     public void deleteById(UUID id) {
         Optional<Rating> rating = ratingRepository.findById(id);
         if (rating.isPresent()) {
-            ratingRepository.delete(id);
+            ratingRepository.deleteById(id);
             notifyObservers(rating.get().getItemId());
         } else {
             throw new IllegalArgumentException("Rating not found");

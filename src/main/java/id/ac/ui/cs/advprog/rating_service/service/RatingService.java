@@ -7,11 +7,11 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface RatingService {
-    Rating save(Rating rating); // Sesuaikan dengan repository
-    List<Rating> findAll(); // Sesuaikan dengan repository
-    Optional<Rating> findById(UUID ratingId); // Sesuaikan dengan repository
-    Rating update(Rating rating); // Sesuaikan dengan repository (kita bisa menambahkan method ini jika perlu)
-    void deleteById(UUID ratingId); // Sesuaikan dengan repository
+    Rating save(Rating rating);
+    List<Rating> findAll();
+    Optional<Rating> findById(UUID ratingId);
+    Rating update(Rating rating);
+    void deleteById(UUID ratingId);
     List<Rating> findByItemId(UUID itemId);
 
 }
