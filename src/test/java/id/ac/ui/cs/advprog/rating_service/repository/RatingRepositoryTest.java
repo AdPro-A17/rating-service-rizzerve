@@ -24,7 +24,7 @@ public class RatingRepositoryTest {
     @BeforeEach
     void setUp() {
         rating = new Rating();
-        rating.setRatingId(UUID.randomUUID());
+        // rating.setRatingId(UUID.randomUUID());
         rating.setMejaId(UUID.randomUUID());
 
         itemId = UUID.randomUUID();
