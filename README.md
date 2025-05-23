@@ -57,3 +57,9 @@ RatingRepository
 RatingObserver
 
 - Komponen lain (misalnya sistem rekomendasi atau notifikasi) yang mendaftar ke RatingServiceImpl akan menerima notifikasi saat ada perubahan data rating.
+
+Async
+
+- Menjadikan notifyObservers async memberikan keuntungan dari sisi efisiensi dan performa. Proses notifikasi ini bisa memakan waktu, karena perlu mengambil semua rating untuk suatu item, menghitung nilai rata-rata, dan mungkin mengirim request ke service lain. Jika dilakukan secara synchronous, proses ini akan memperlambat response API dan membuat pengguna menunggu lebih lama. Dengan menjalankannya secara async, proses utama tetap cepat karena notifyObservers akan berjalan di background thread.
+
+- Selain itu, menjadikan notifyObservers async juga memberikan ketahanan sistem yang lebih baik terhadap kegagalan. Jika terjadi error saat mengeksekusi notifyObservers, misalnya service observer tidak merespon, hal ini tidak akan menggagalkan proses utama seperti penyimpanan rating. Ini penting untuk menjaga agar data tetap konsisten dan tidak kehilangan update hanya karena kegagalan efek samping. Oleh karena itu, memisahkan dan menjadikan notifyObservers sebagai proses async adalah pendekatan yang aman, efisien, dan lebih tangguh terhadap gangguan.
