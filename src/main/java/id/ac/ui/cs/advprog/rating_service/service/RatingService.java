@@ -13,5 +13,6 @@ public interface RatingService {
     Rating update(Rating rating);
     void deleteById(UUID ratingId);
     List<Rating> findByItemId(UUID itemId);
+    double getAverageRatingByItemId(UUID itemId);
 
 }

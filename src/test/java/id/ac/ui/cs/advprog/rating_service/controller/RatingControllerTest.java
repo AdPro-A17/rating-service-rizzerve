@@ -84,4 +84,18 @@ class RatingControllerTest {
         });
         assertEquals("Rating ID must not be null", exception.getMessage());
     }
+
+    @Test
+    void testGetAverageRatingByItemIdSuccessfully() {
+        UUID itemId = sampleRating.getItemId();
+        double avgRating = 4.5;
+
+        when(ratingService.getAverageRatingByItemId(itemId)).thenReturn(avgRating);
+
+        ResponseEntity<Double> response = controller.getAverageRatingByItemId(itemId);
+
+        assertEquals(200, response.getStatusCodeValue(), "Response status should be 200 OK");
+        assertEquals(avgRating, response.getBody(), "Returned average rating should match");
+        verify(ratingService, times(1)).getAverageRatingByItemId(itemId);
+    }
 }

@@ -72,4 +72,12 @@ public class RatingController {
         List<Rating> ratings = ratingService.findByItemId(itemId);
         return ResponseEntity.ok(ratings);
     }
+
+    @GetMapping("/item/{itemId}/average")
+    public ResponseEntity<Double> getAverageRatingByItemId(@PathVariable UUID itemId) {
+        double averageRating = ratingService.getAverageRatingByItemId(itemId);
+        return ResponseEntity.ok(averageRating);
+    }
+
+
 }

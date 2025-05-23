@@ -83,5 +83,13 @@ public class RatingServiceImpl implements RatingService, RatingSubject {
         return ratingRepository.findByItemId(itemId);
     }
 
+    @Override
+    public double getAverageRatingByItemId(UUID itemId) {
+        List<Rating> ratings = findByItemId(itemId);
+        return ratings.stream()
+                .mapToInt(Rating::getValue)
+                .average()
+                .orElse(0.0);
+    }
 
 }

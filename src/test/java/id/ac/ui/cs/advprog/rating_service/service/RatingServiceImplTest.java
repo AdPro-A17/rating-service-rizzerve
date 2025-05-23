@@ -142,4 +142,38 @@ class RatingServiceImplTest {
         assertEquals(rating, found.get(0));
         verify(ratingRepository).findByItemId(itemId);
     }
+
+    @Test
+    void testGetAverageRatingByItemIdWithRatings() {
+        UUID itemId = UUID.randomUUID();
+
+        Rating r1 = new Rating();
+        r1.setItemId(itemId);
+        r1.setValue(4);
+
+        Rating r2 = new Rating();
+        r2.setItemId(itemId);
+        r2.setValue(2);
+
+        when(ratingRepository.findByItemId(itemId)).thenReturn(List.of(r1, r2));
+
+        double average = ratingService.getAverageRatingByItemId(itemId);
+
+        assertEquals(3.0, average, 0.01, "Average rating should be correct");
+        verify(ratingRepository).findByItemId(itemId);
+    }
+
+    @Test
+    void testGetAverageRatingByItemIdWithNoRatings() {
+        UUID itemId = UUID.randomUUID();
+
+        when(ratingRepository.findByItemId(itemId)).thenReturn(List.of());
+
+        double average = ratingService.getAverageRatingByItemId(itemId);
+
+        assertEquals(0.0, average, "Average rating should be 0.0 when no ratings");
+        verify(ratingRepository).findByItemId(itemId);
+    }
+
+
 }
