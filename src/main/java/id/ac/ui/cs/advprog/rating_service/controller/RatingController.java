@@ -79,5 +79,10 @@ public class RatingController {
         return ResponseEntity.ok(averageRating);
     }
 
+    @PutMapping("/meja/{mejaId}/disable")
+    public ResponseEntity<Void> disableRatingsForMeja(@PathVariable UUID mejaId) {
+        ratingService.disableUpdatesForMeja(mejaId);
+        return ResponseEntity.ok().build();
+    }
 
 }

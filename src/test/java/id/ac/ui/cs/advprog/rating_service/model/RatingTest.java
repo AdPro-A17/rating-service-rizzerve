@@ -10,18 +10,18 @@ import static org.junit.jupiter.api.Assertions.*;
 class RatingTest {
     private Rating rating;
     private UUID ratingId;
-    private UUID userId;
+    private UUID mejaId;
     private UUID itemId;
 
     @BeforeEach
     void setUp() {
         ratingId = UUID.randomUUID();
-        userId = UUID.randomUUID();
+        mejaId = UUID.randomUUID();
         itemId = UUID.randomUUID();
 
         rating = new Rating();
         rating.setRatingId(ratingId);
-        rating.setUserId(userId);
+        rating.setMejaId(mejaId);
         rating.setItemId(itemId);
         rating.setValue(4); // valid default
     }
@@ -31,10 +31,6 @@ class RatingTest {
         assertEquals(ratingId, rating.getRatingId(), "Rating ID should match the assigned UUID");
     }
 
-    @Test
-    void testSetAndGetUserId() {
-        assertEquals(userId, rating.getUserId(), "User ID should match the assigned UUID");
-    }
 
     @Test
     void testSetAndGetItemId() {
@@ -62,13 +58,6 @@ class RatingTest {
         assertEquals("Rating value must be between 1 and 5", exception.getMessage());
     }
 
-    @Test
-    void testSetNullUserId() {
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            rating.setUserId(null);
-        });
-        assertEquals("User ID cannot be null", exception.getMessage());
-    }
 
     @Test
     void testSetNullItemId() {
@@ -76,5 +65,14 @@ class RatingTest {
             rating.setItemId(null);
         });
         assertEquals("Item ID cannot be null", exception.getMessage());
+    }
+
+    @Test
+    void testSetAndGetCanUpdate() {
+        rating.setCanUpdate(true);
+        assertTrue(rating.isCanUpdate(), "canUpdate should be true");
+
+        rating.setCanUpdate(false);
+        assertFalse(rating.isCanUpdate(), "canUpdate should be false");
     }
 }

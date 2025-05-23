@@ -8,4 +8,7 @@ import java.util.UUID;
 
 public interface RatingRepository extends JpaRepository<Rating, UUID> {
     List<Rating> findByItemId(UUID itemId);
+    List<Rating> findByItemIdAndMejaId(UUID itemId, UUID mejaId);
+    List<Rating> findByMejaId(UUID mejaId);
+
 }

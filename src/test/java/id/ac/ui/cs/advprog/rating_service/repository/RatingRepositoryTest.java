@@ -25,7 +25,7 @@ public class RatingRepositoryTest {
     void setUp() {
         rating = new Rating();
         rating.setRatingId(UUID.randomUUID());
-        rating.setUserId(UUID.randomUUID());
+        rating.setMejaId(UUID.randomUUID());
 
         itemId = UUID.randomUUID();
         rating.setItemId(itemId);
@@ -48,4 +48,17 @@ public class RatingRepositoryTest {
         Optional<Rating> result = ratingRepository.findById(rating.getRatingId());
         assertTrue(result.isEmpty(), "Deleted rating should not be present in repository");
     }
+
+    @Test
+    void testFindByItemIdAndMejaId() {
+        UUID itemId = rating.getItemId();
+        UUID mejaId = rating.getMejaId();
+
+        List<Rating> results = ratingRepository.findByItemIdAndMejaId(itemId, mejaId);
+
+        // Asumsikan data sudah ada dengan kriteria ini
+        assertNotNull(results);
+        assertTrue(results.stream().allMatch(r -> r.getItemId().equals(itemId) && r.getMejaId().equals(mejaId)));
+    }
+
 }

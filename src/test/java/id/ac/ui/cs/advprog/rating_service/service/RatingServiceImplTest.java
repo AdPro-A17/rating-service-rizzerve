@@ -29,7 +29,7 @@ class RatingServiceImplTest {
         MockitoAnnotations.openMocks(this);
         rating = new Rating();
         rating.setRatingId(UUID.randomUUID());
-        rating.setUserId(UUID.randomUUID());
+        rating.setMejaId(UUID.randomUUID());
         rating.setItemId(UUID.randomUUID());
         rating.setValue(4);
 
@@ -39,17 +39,19 @@ class RatingServiceImplTest {
     @Test
     void testSave() {
         UUID itemId = UUID.randomUUID();
+        UUID mejaId = UUID.randomUUID(); // ganti userId ke mejaId
         Rating rating = new Rating();
         rating.setRatingId(UUID.randomUUID());
-        rating.setUserId(UUID.randomUUID());
+        rating.setMejaId(mejaId);
         rating.setItemId(itemId);
         rating.setValue(4);
+        rating.setCanUpdate(true);
 
         RatingObserver observer = mock(RatingObserver.class);
         ratingService.addObserver(observer);
 
         when(ratingRepository.save(rating)).thenReturn(rating);
-        when(ratingRepository.findByItemId(itemId)).thenReturn(List.of(rating)); // Mock ini penting
+        when(ratingRepository.findByItemId(itemId)).thenReturn(List.of(rating));
 
         Rating savedRating = ratingService.save(rating);
 

@@ -27,7 +27,7 @@ class RatingControllerTest {
 
         sampleRating = new Rating();
         sampleRating.setRatingId(UUID.randomUUID());
-        sampleRating.setUserId(UUID.randomUUID());
+        sampleRating.setMejaId(UUID.randomUUID());
         sampleRating.setItemId(UUID.randomUUID());
         sampleRating.setValue(4);
     }
@@ -98,4 +98,6 @@ class RatingControllerTest {
         assertEquals(avgRating, response.getBody(), "Returned average rating should match");
         verify(ratingService, times(1)).getAverageRatingByItemId(itemId);
     }
+
+
 }

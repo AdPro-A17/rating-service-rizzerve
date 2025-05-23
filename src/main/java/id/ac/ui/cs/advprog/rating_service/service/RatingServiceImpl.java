@@ -42,9 +42,25 @@ public class RatingServiceImpl implements RatingService, RatingSubject {
 
     @Override
     public Rating save(Rating rating) {
-        Rating savedRating = ratingRepository.save(rating);
-        notifyObservers(rating.getItemId());
-        return savedRating;
+        List<Rating> existing = ratingRepository.findByItemIdAndMejaId(rating.getItemId(), rating.getMejaId());
+
+        Rating saved;
+        if (!existing.isEmpty()) {
+            Rating current = existing.get(0);
+            if (current.isCanUpdate()) {
+                current.setValue(rating.getValue());
+                saved = ratingRepository.save(current);
+            } else {
+                rating.setCanUpdate(true);
+                saved = ratingRepository.save(rating);
+            }
+        } else {
+            rating.setCanUpdate(true);
+            saved = ratingRepository.save(rating);
+        }
+
+        notifyObservers(saved.getItemId());
+        return saved;
     }
 
     @Override
@@ -93,5 +109,22 @@ public class RatingServiceImpl implements RatingService, RatingSubject {
                 .average()
                 .orElse(0.0);
     }
+
+    @Override
+    public List<Rating> findByItemIdAndMejaId(UUID itemId, UUID mejaId) {
+        return ratingRepository.findByItemIdAndMejaId(itemId, mejaId);
+    }
+
+    @Override
+    public void disableUpdatesForMeja(UUID mejaId) {
+        List<Rating> ratings = ratingRepository.findByMejaId(mejaId);
+        for (Rating rating : ratings) {
+            if (rating.isCanUpdate()) {
+                rating.setCanUpdate(false);
+                ratingRepository.save(rating);
+            }
+        }
+    }
+
 
 }
