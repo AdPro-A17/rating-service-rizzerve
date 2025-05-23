@@ -175,5 +175,28 @@ class RatingServiceImplTest {
         verify(ratingRepository).findByItemId(itemId);
     }
 
+    @Test
+    void testNotifyObserversAsync() {
+        UUID itemId = UUID.randomUUID();
+        Rating r1 = new Rating();
+        r1.setItemId(itemId);
+        r1.setValue(3);
+
+        Rating r2 = new Rating();
+        r2.setItemId(itemId);
+        r2.setValue(5);
+
+        List<Rating> ratings = List.of(r1, r2);
+
+        when(ratingRepository.findByItemId(itemId)).thenReturn(ratings);
+
+        RatingObserver asyncObserver = mock(RatingObserver.class);
+        ratingService.addObserver(asyncObserver);
+
+        ratingService.notifyObservers(itemId); // async call
+
+        // Verifikasi bahwa observer dipanggil dalam 1 detik
+        verify(asyncObserver, timeout(1000).times(1)).updateRating(itemId, 4.0);
+    }
 
 }

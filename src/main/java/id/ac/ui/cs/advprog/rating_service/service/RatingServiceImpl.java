@@ -2,6 +2,7 @@ package id.ac.ui.cs.advprog.rating_service.service;
 
 import id.ac.ui.cs.advprog.rating_service.model.Rating;
 import id.ac.ui.cs.advprog.rating_service.repository.RatingRepository;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -27,6 +28,7 @@ public class RatingServiceImpl implements RatingService, RatingSubject {
     }
 
     @Override
+    @Async("taskExecutor") // gunakan executor dari AsyncConfig
     public void notifyObservers(UUID itemId) {
         List<Rating> ratings = findByItemId(itemId);
         double avg = ratings.stream()
