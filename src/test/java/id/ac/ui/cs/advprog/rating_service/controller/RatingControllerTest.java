@@ -99,5 +99,13 @@ class RatingControllerTest {
         verify(ratingService, times(1)).getAverageRatingByItemId(itemId);
     }
 
+    @Test
+    void testDeleteRatingWithValidId() {
+        UUID validId = UUID.randomUUID();
 
+        ResponseEntity<Void> response = controller.deleteRating(validId);
+
+        assertEquals(204, response.getStatusCodeValue(), "Should return 204 No Content for valid ID");
+        verify(ratingService, times(1)).deleteById(validId);
+    }
 }

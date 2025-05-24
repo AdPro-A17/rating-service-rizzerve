@@ -53,6 +53,10 @@ public class RatingController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteRating(@PathVariable UUID id) {
+        if (id == null) {
+            throw new IllegalArgumentException("Rating ID must not be null");
+        }
+
         ratingService.deleteById(id);
         return ResponseEntity.noContent().build();
     }
