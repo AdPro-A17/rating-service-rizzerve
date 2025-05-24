@@ -1,6 +1,7 @@
 package id.ac.ui.cs.advprog.rating_service.service;
 
 import id.ac.ui.cs.advprog.rating_service.model.Rating;
+import id.ac.ui.cs.advprog.rating_service.observer.RatingObserver;
 import id.ac.ui.cs.advprog.rating_service.repository.RatingRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

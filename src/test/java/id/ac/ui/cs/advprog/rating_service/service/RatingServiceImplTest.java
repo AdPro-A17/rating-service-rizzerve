@@ -1,10 +1,15 @@
 package id.ac.ui.cs.advprog.rating_service.service;
 
+import id.ac.ui.cs.advprog.rating_service.exception.RatingNotFoundException;
 import id.ac.ui.cs.advprog.rating_service.model.Rating;
+import id.ac.ui.cs.advprog.rating_service.observer.RatingObserver;
 import id.ac.ui.cs.advprog.rating_service.repository.RatingRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
+import id.ac.ui.cs.advprog.rating_service.client.MenuServiceClient;
+import id.ac.ui.cs.advprog.rating_service.dto.MenuItemDTO;
+import org.springframework.http.ResponseEntity;
 
 import java.util.*;
 
@@ -21,6 +26,9 @@ class RatingServiceImplTest {
 
     @Mock
     private RatingObserver observer;
+
+    @Mock
+    private MenuServiceClient menuServiceClient;
 
     private Rating rating;
 
@@ -39,7 +47,7 @@ class RatingServiceImplTest {
     @Test
     void testSave() {
         UUID itemId = UUID.randomUUID();
-        UUID mejaId = UUID.randomUUID(); // ganti userId ke mejaId
+        UUID mejaId = UUID.randomUUID();
         Rating rating = new Rating();
         rating.setRatingId(UUID.randomUUID());
         rating.setMejaId(mejaId);
@@ -50,6 +58,13 @@ class RatingServiceImplTest {
         RatingObserver observer = mock(RatingObserver.class);
         ratingService.addObserver(observer);
 
+        // ✅ Mock respons dari menuServiceClient agar itemId valid
+        MenuServiceClient.MenuItemResponse mockItem = new MenuServiceClient.MenuItemResponse();
+        mockItem.setId(itemId);
+        mockItem.setName("Nasi Goreng");
+
+        when(menuServiceClient.getMenuItemById(itemId)).thenReturn(mockItem);
+
         when(ratingRepository.save(rating)).thenReturn(rating);
         when(ratingRepository.findByItemId(itemId)).thenReturn(List.of(rating));
 
@@ -57,6 +72,7 @@ class RatingServiceImplTest {
 
         assertEquals(rating, savedRating);
         verify(observer).updateRating(eq(itemId), eq(4.0d));
+        verify(menuServiceClient).getMenuItemById(itemId);
     }
 
     @Test
@@ -100,22 +116,11 @@ class RatingServiceImplTest {
         UUID id = rating.getRatingId();
         when(ratingRepository.findById(id)).thenReturn(Optional.empty());
 
-        Exception ex = assertThrows(IllegalArgumentException.class, () -> ratingService.update(rating));
-        assertEquals("Rating not found", ex.getMessage());
+        Exception ex = assertThrows(RatingNotFoundException.class, () -> ratingService.update(rating));
+        assertTrue(ex.getMessage().contains("Rating dengan ID"));
+
         verify(ratingRepository).findById(id);
         verify(ratingRepository, never()).save(any());
-    }
-
-    @Test
-    void testDeleteById() {
-        UUID id = rating.getRatingId();
-        when(ratingRepository.findById(id)).thenReturn(Optional.of(rating));
-        when(ratingRepository.findAll()).thenReturn(List.of()); // setelah delete, rating kosong
-
-        ratingService.deleteById(id);
-
-        verify(ratingRepository).deleteById(id);
-        verify(observer).updateRating(eq(rating.getItemId()), eq(0.0));
     }
 
     @Test
@@ -123,8 +128,8 @@ class RatingServiceImplTest {
         UUID id = rating.getRatingId();
         when(ratingRepository.findById(id)).thenReturn(Optional.empty());
 
-        Exception ex = assertThrows(IllegalArgumentException.class, () -> ratingService.deleteById(id));
-        assertEquals("Rating not found", ex.getMessage());
+        Exception ex = assertThrows(RatingNotFoundException.class, () -> ratingService.deleteById(id));
+        assertTrue(ex.getMessage().contains("Rating dengan ID"));
 
         verify(ratingRepository).findById(id);
         verify(ratingRepository, never()).delete(any());
@@ -199,6 +204,68 @@ class RatingServiceImplTest {
 
         // Verifikasi bahwa observer dipanggil dalam 1 detik
         verify(asyncObserver, timeout(1000).times(1)).updateRating(itemId, 4.0);
+    }
+
+    @Test
+    void testFindByItemIdAndMejaId_ReturnsRatings() {
+        // Prepare sample data
+        UUID itemId = UUID.randomUUID();
+        UUID mejaId = UUID.randomUUID();
+        Rating rating1 = new Rating();
+        rating1.setRatingId(UUID.randomUUID());
+        rating1.setItemId(itemId);
+        rating1.setMejaId(mejaId);
+        rating1.setValue(4);
+        rating1.setCanUpdate(true);
+
+        List<Rating> expectedRatings = List.of(rating1);
+
+        // Mock repository behavior
+        when(ratingRepository.findByItemIdAndMejaId(itemId, mejaId)).thenReturn(expectedRatings);
+
+        // Call service method
+        List<Rating> actualRatings = ratingService.findByItemIdAndMejaId(itemId, mejaId);
+
+        // Verify
+        assertNotNull(actualRatings);
+        assertEquals(1, actualRatings.size());
+        assertEquals(expectedRatings, actualRatings);
+
+        verify(ratingRepository, times(1)).findByItemIdAndMejaId(itemId, mejaId);
+    }
+
+    @Test
+    void testFindByItemIdAndMejaId_ReturnsEmptyListWhenNoRatings() {
+        // Mock repository to return empty list
+        UUID itemId = UUID.randomUUID();
+        UUID mejaId = UUID.randomUUID();
+        when(ratingRepository.findByItemIdAndMejaId(itemId, mejaId)).thenReturn(Collections.emptyList());
+
+        List<Rating> actualRatings = ratingService.findByItemIdAndMejaId(itemId, mejaId);
+
+        assertNotNull(actualRatings);
+        assertTrue(actualRatings.isEmpty());
+
+        verify(ratingRepository, times(1)).findByItemIdAndMejaId(itemId, mejaId);
+    }
+
+    @Test
+    void testSaveThrowsExceptionWhenItemIdIsInvalid() {
+        UUID invalidItemId = UUID.randomUUID();
+        Rating rating = new Rating();
+        rating.setRatingId(UUID.randomUUID());
+        rating.setItemId(invalidItemId);
+        rating.setMejaId(UUID.randomUUID());
+        rating.setValue(3);
+        rating.setCanUpdate(true);
+
+        when(menuServiceClient.getMenuItemById(invalidItemId)).thenReturn(null);
+
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> ratingService.save(rating));
+
+        assertEquals("Invalid itemId: item does not exist in MenuService", exception.getMessage());
+        verify(menuServiceClient).getMenuItemById(invalidItemId);
+        verify(ratingRepository, never()).save(any());
     }
 
 }

@@ -1,6 +1,10 @@
 package id.ac.ui.cs.advprog.rating_service.service;
 
+import id.ac.ui.cs.advprog.rating_service.client.MenuServiceClient;
+import id.ac.ui.cs.advprog.rating_service.exception.RatingNotFoundException;
 import id.ac.ui.cs.advprog.rating_service.model.Rating;
+import id.ac.ui.cs.advprog.rating_service.observer.RatingObserver;
+import id.ac.ui.cs.advprog.rating_service.observer.RatingSubject;
 import id.ac.ui.cs.advprog.rating_service.repository.RatingRepository;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -12,9 +16,11 @@ public class RatingServiceImpl implements RatingService, RatingSubject {
 
     private final RatingRepository ratingRepository;
     private final List<RatingObserver> observers = new ArrayList<>();
-
-    public RatingServiceImpl(RatingRepository ratingRepository) {
+    private final MenuServiceClient menuServiceClient;
+    
+    public RatingServiceImpl(RatingRepository ratingRepository, MenuServiceClient menuServiceClient) {
         this.ratingRepository = ratingRepository;
+        this.menuServiceClient = menuServiceClient;
     }
 
     @Override
@@ -42,6 +48,9 @@ public class RatingServiceImpl implements RatingService, RatingSubject {
 
     @Override
     public Rating save(Rating rating) {
+        if (menuServiceClient.getMenuItemById(rating.getItemId()) == null) {
+            throw new IllegalArgumentException("Invalid itemId: item does not exist in MenuService");
+        }
         List<Rating> existing = ratingRepository.findByItemIdAndMejaId(rating.getItemId(), rating.getMejaId());
 
         Rating saved;
@@ -78,7 +87,7 @@ public class RatingServiceImpl implements RatingService, RatingSubject {
         UUID ratingId = rating.getRatingId();
         Optional<Rating> existing = ratingRepository.findById(ratingId);
         if (existing.isEmpty()) {
-            throw new IllegalArgumentException("Rating not found");
+            throw new RatingNotFoundException("Rating dengan ID " + ratingId + " tidak ditemukan");
         }
         Rating updatedRating = ratingRepository.save(rating);
         notifyObservers(rating.getItemId());
@@ -92,7 +101,7 @@ public class RatingServiceImpl implements RatingService, RatingSubject {
             ratingRepository.deleteById(id);
             notifyObservers(rating.get().getItemId());
         } else {
-            throw new IllegalArgumentException("Rating not found");
+            throw new RatingNotFoundException("Rating dengan ID " + id + " tidak ditemukan");
         }
     }
 
@@ -125,6 +134,5 @@ public class RatingServiceImpl implements RatingService, RatingSubject {
             }
         }
     }
-
 
 }

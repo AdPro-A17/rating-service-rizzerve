@@ -1,7 +1,9 @@
 package id.ac.ui.cs.advprog.rating_service.controller;
 
+import id.ac.ui.cs.advprog.rating_service.exception.RatingNotFoundException;
 import id.ac.ui.cs.advprog.rating_service.model.Rating;
 import id.ac.ui.cs.advprog.rating_service.service.RatingService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -41,30 +43,24 @@ public class RatingController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @PutMapping("/{id}")
     public ResponseEntity<Rating> updateRating(@PathVariable UUID id, @RequestBody Rating rating) {
         if (!id.equals(rating.getRatingId())) {
             return ResponseEntity.badRequest().build();
         }
-        try {
-            Rating updated = ratingService.update(rating);
-            return ResponseEntity.ok(updated);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.notFound().build();
-        }
+        Rating updated = ratingService.update(rating);
+        return ResponseEntity.ok(updated);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteRating(@PathVariable UUID id) {
-        if (id == null) {
-            throw new IllegalArgumentException("Rating ID must not be null");
-        }
-        try {
-            ratingService.deleteById(id); // Sesuaikan dengan service
-            return ResponseEntity.noContent().build();
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.notFound().build();
-        }
+        ratingService.deleteById(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    // Tangani exception RatingNotFoundException agar respon 404
+    @ExceptionHandler(RatingNotFoundException.class)
+    public ResponseEntity<String> handleRatingNotFoundException(RatingNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
     }
 
     @GetMapping("/item/{itemId}")

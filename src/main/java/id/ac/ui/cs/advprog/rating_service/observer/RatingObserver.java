@@ -1,4 +1,4 @@
-package id.ac.ui.cs.advprog.rating_service.service;
+package id.ac.ui.cs.advprog.rating_service.observer;
 
 import java.util.UUID;
 

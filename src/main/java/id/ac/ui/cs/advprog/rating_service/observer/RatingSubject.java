@@ -1,6 +1,5 @@
-package id.ac.ui.cs.advprog.rating_service.service;
+package id.ac.ui.cs.advprog.rating_service.observer;
 
-import java.util.List;
 import java.util.UUID;
 
 public interface RatingSubject {
