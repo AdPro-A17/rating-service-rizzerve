@@ -17,10 +17,12 @@ public class RatingServiceImpl implements RatingService, RatingSubject {
     private final RatingRepository ratingRepository;
     private final List<RatingObserver> observers = new ArrayList<>();
     private final MenuServiceClient menuServiceClient;
-    
-    public RatingServiceImpl(RatingRepository ratingRepository, MenuServiceClient menuServiceClient) {
+    private final SessionManager sessionManager;
+
+    public RatingServiceImpl(RatingRepository ratingRepository, MenuServiceClient menuServiceClient, SessionManager sessionManager) {
         this.ratingRepository = ratingRepository;
         this.menuServiceClient = menuServiceClient;
+        this.sessionManager = sessionManager;
     }
 
     @Override
@@ -48,6 +50,8 @@ public class RatingServiceImpl implements RatingService, RatingSubject {
 
     @Override
     public Rating save(Rating rating) {
+        UUID mejaId = sessionManager.getCurrentSessionId();
+        rating.setMejaId(mejaId);
         if (menuServiceClient.getMenuItemById(rating.getItemId()) == null) {
             throw new IllegalArgumentException("Invalid itemId: item does not exist in MenuService");
         }
@@ -147,15 +151,16 @@ public class RatingServiceImpl implements RatingService, RatingSubject {
 
     @Override
     public UUID checkoutMeja(UUID mejaId) {
-        List<Rating> ratings = ratingRepository.findByMejaId(mejaId);
-        for (Rating rating : ratings) {
-            if (rating.isCanUpdate()) {
-                rating.setCanUpdate(false);
-                ratingRepository.save(rating);
-            }
-        }
+        UUID newMejaId = UUID.randomUUID();
+        // Ambil semua rating dengan mejaId tertentu, lalu matikan update-nya sekaligus save
+        ratingRepository.findByMejaId(mejaId).stream()
+                .filter(Rating::isCanUpdate)
+                .forEach(rating -> {
+                    rating.setCanUpdate(false);
+                    ratingRepository.save(rating);
+                });
 
-        // Generate mejaId baru
-        return UUID.randomUUID();
+        // Kembalikan UUID baru sebagai meja/session baru
+        return newMejaId;
     }
 }
