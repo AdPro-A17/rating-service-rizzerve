@@ -7,9 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api/ratings")
@@ -42,7 +40,7 @@ public class RatingController {
         return rating.map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
-
+    @PutMapping("/{id}")
     public ResponseEntity<Rating> updateRating(@PathVariable UUID id, @RequestBody Rating rating) {
         if (!id.equals(rating.getRatingId())) {
             return ResponseEntity.badRequest().build();
@@ -84,5 +82,20 @@ public class RatingController {
         ratingService.disableUpdatesForMeja(mejaId);
         return ResponseEntity.ok().build();
     }
+
+    @GetMapping("/meja/{mejaId}")
+    public ResponseEntity<List<Rating>> getRatingsByMejaId(@PathVariable UUID mejaId) {
+        List<Rating> ratings = ratingService.findByMejaId(mejaId);
+        return ResponseEntity.ok(ratings);
+    }
+
+    @PutMapping("/meja/{mejaId}/checkout")
+    public ResponseEntity<Map<String, UUID>> checkoutMeja(@PathVariable UUID mejaId) {
+        UUID newMejaId = ratingService.checkoutMeja(mejaId);
+        Map<String, UUID> response = new HashMap<>();
+        response.put("newMejaId", newMejaId);
+        return ResponseEntity.ok(response);
+    }
+
 
 }

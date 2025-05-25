@@ -58,10 +58,10 @@ public class RatingServiceImpl implements RatingService, RatingSubject {
             Rating current = existing.get(0);
             if (current.isCanUpdate()) {
                 current.setValue(rating.getValue());
-                saved = ratingRepository.save(current);
+                saved = ratingRepository.save(current); // ID tetap
             } else {
-                rating.setCanUpdate(true);
-                saved = ratingRepository.save(rating);
+                rating.setCanUpdate(true); // simpan rating baru
+                saved = ratingRepository.save(rating); // ID baru
             }
         } else {
             rating.setCanUpdate(true);
@@ -96,13 +96,18 @@ public class RatingServiceImpl implements RatingService, RatingSubject {
 
     @Override
     public void deleteById(UUID id) {
-        Optional<Rating> rating = ratingRepository.findById(id);
-        if (rating.isPresent()) {
-            ratingRepository.deleteById(id);
-            notifyObservers(rating.get().getItemId());
-        } else {
+        Optional<Rating> ratingOpt = ratingRepository.findById(id);
+        if (ratingOpt.isEmpty()) {
             throw new RatingNotFoundException("Rating dengan ID " + id + " tidak ditemukan");
         }
+
+        Rating rating = ratingOpt.get();
+        if (!rating.isCanUpdate()) {
+            throw new IllegalStateException("Rating sudah tidak bisa dihapus karena sudah checkout");
+        }
+
+        ratingRepository.deleteById(id);
+        notifyObservers(rating.getItemId());
     }
 
     @Override
@@ -135,4 +140,22 @@ public class RatingServiceImpl implements RatingService, RatingSubject {
         }
     }
 
+    @Override
+    public List<Rating> findByMejaId(UUID mejaId) {
+        return ratingRepository.findByMejaId(mejaId);
+    }
+
+    @Override
+    public UUID checkoutMeja(UUID mejaId) {
+        List<Rating> ratings = ratingRepository.findByMejaId(mejaId);
+        for (Rating rating : ratings) {
+            if (rating.isCanUpdate()) {
+                rating.setCanUpdate(false);
+                ratingRepository.save(rating);
+            }
+        }
+
+        // Generate mejaId baru
+        return UUID.randomUUID();
+    }
 }

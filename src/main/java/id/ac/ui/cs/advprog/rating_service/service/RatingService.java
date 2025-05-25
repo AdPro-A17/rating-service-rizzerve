@@ -16,4 +16,6 @@ public interface RatingService {
     double getAverageRatingByItemId(UUID itemId);
     List<Rating> findByItemIdAndMejaId(UUID itemId, UUID mejaId);
     void disableUpdatesForMeja(UUID mejaId);
+    List<Rating> findByMejaId(UUID mejaId);
+    UUID checkoutMeja(UUID mejaId);
 }

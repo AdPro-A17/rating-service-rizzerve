@@ -268,4 +268,57 @@ class RatingServiceImplTest {
         verify(ratingRepository, never()).save(any());
     }
 
+    @Test
+    void testCheckoutSetsCanUpdateFalse() {
+        UUID mejaId = UUID.randomUUID();
+        UUID itemId = UUID.randomUUID();
+
+        Rating rating1 = new Rating();
+        rating1.setRatingId(UUID.randomUUID());
+        rating1.setItemId(itemId);
+        rating1.setMejaId(mejaId);
+        rating1.setValue(5);
+        rating1.setCanUpdate(true);
+
+        Rating rating2 = new Rating();
+        rating2.setRatingId(UUID.randomUUID());
+        rating2.setItemId(itemId);
+        rating2.setMejaId(mejaId);
+        rating2.setValue(3);
+        rating2.setCanUpdate(true);
+
+        List<Rating> ratings = List.of(rating1, rating2);
+
+        when(ratingRepository.findByMejaId(mejaId)).thenReturn(ratings);
+        when(ratingRepository.save(any(Rating.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        ratingService.checkoutMeja(mejaId);
+
+        assertFalse(rating1.isCanUpdate());
+        assertFalse(rating2.isCanUpdate());
+        verify(ratingRepository, times(2)).save(any(Rating.class));
+    }
+
+    @Test
+    void testFindByMejaId_ReturnsRatings() {
+        UUID mejaId = UUID.randomUUID();
+        Rating rating1 = new Rating();
+        rating1.setRatingId(UUID.randomUUID());
+        rating1.setMejaId(mejaId);
+        rating1.setItemId(UUID.randomUUID());
+        rating1.setValue(5);
+
+        List<Rating> expectedRatings = List.of(rating1);
+
+        when(ratingRepository.findByMejaId(mejaId)).thenReturn(expectedRatings);
+
+        List<Rating> actualRatings = ratingService.findByMejaId(mejaId);
+
+        assertNotNull(actualRatings);
+        assertEquals(1, actualRatings.size());
+        assertEquals(expectedRatings, actualRatings);
+
+        verify(ratingRepository, times(1)).findByMejaId(mejaId);
+    }
+
 }

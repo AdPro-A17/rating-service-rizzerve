@@ -1,5 +1,6 @@
 package id.ac.ui.cs.advprog.rating_service.controller;
 
+import id.ac.ui.cs.advprog.rating_service.exception.RatingNotFoundException;
 import id.ac.ui.cs.advprog.rating_service.model.Rating;
 import id.ac.ui.cs.advprog.rating_service.service.RatingService;
 import org.junit.jupiter.api.BeforeEach;
@@ -7,8 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.http.ResponseEntity;
 
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -32,57 +32,70 @@ class RatingControllerTest {
         sampleRating.setValue(4);
     }
 
-    // Happy Path: Membuat rating baru
+    // --- HAPPY PATH ---
+
     @Test
     void testCreateRatingSuccessfully() {
-        when(ratingService.save(any(Rating.class))).thenReturn(sampleRating); // Sesuaikan dengan method save()
+        when(ratingService.save(any(Rating.class))).thenReturn(sampleRating);
 
         ResponseEntity<Rating> response = controller.createRating(sampleRating);
 
-        assertEquals(200, response.getStatusCodeValue(), "Response status should be 200 OK");
-        assertEquals(sampleRating, response.getBody(), "Returned rating should match the sample");
-        verify(ratingService, times(1)).save(sampleRating); // Sesuaikan dengan method save()
+        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(sampleRating, response.getBody());
+        verify(ratingService, times(1)).save(sampleRating);
     }
 
-    // Happy Path: Mendapatkan semua rating
     @Test
     void testGetAllRatingsSuccessfully() {
         List<Rating> mockList = List.of(sampleRating);
-        when(ratingService.findAll()).thenReturn(mockList); // Sesuaikan dengan method findAll()
+        when(ratingService.findAll()).thenReturn(mockList);
 
         ResponseEntity<List<Rating>> response = controller.getAllRatings();
 
-        assertEquals(200, response.getStatusCodeValue(), "Response status should be 200 OK");
-        assertEquals(mockList, response.getBody(), "Returned list should contain sampleRating");
+        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(mockList, response.getBody());
     }
 
-    // Happy Path: Menghapus rating
+    @Test
+    void testGetRatingByIdFound() {
+        when(ratingService.findById(sampleRating.getRatingId())).thenReturn(Optional.of(sampleRating));
+
+        ResponseEntity<Rating> response = controller.getRatingById(sampleRating.getRatingId());
+
+        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(sampleRating, response.getBody());
+    }
+
+    @Test
+    void testUpdateRatingSuccessfully() {
+        when(ratingService.update(sampleRating)).thenReturn(sampleRating);
+
+        ResponseEntity<Rating> response = controller.updateRating(sampleRating.getRatingId(), sampleRating);
+
+        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(sampleRating, response.getBody());
+        verify(ratingService, times(1)).update(sampleRating);
+    }
+
     @Test
     void testDeleteRatingSuccessfully() {
         UUID ratingId = sampleRating.getRatingId();
 
         ResponseEntity<Void> response = controller.deleteRating(ratingId);
 
-        assertEquals(204, response.getStatusCodeValue(), "Response status should be 204 No Content");
-        verify(ratingService, times(1)).deleteById(ratingId); // Sesuaikan dengan method deleteById()
+        assertEquals(204, response.getStatusCodeValue());
+        verify(ratingService, times(1)).deleteById(ratingId);
     }
 
-    // Unhappy Path: Coba buat rating null
     @Test
-    void testCreateNullRating() {
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            controller.createRating(null);
-        });
-        assertEquals("Rating must not be null", exception.getMessage());
-    }
+    void testGetRatingsByItemId() {
+        UUID itemId = sampleRating.getItemId();
+        when(ratingService.findByItemId(itemId)).thenReturn(List.of(sampleRating));
 
-    // Unhappy Path: Hapus rating dengan ID null
-    @Test
-    void testDeleteRatingWithNullId() {
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            controller.deleteRating(null);
-        });
-        assertEquals("Rating ID must not be null", exception.getMessage());
+        ResponseEntity<List<Rating>> response = controller.getRatingsByItemId(itemId);
+
+        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(1, response.getBody().size());
     }
 
     @Test
@@ -94,18 +107,91 @@ class RatingControllerTest {
 
         ResponseEntity<Double> response = controller.getAverageRatingByItemId(itemId);
 
-        assertEquals(200, response.getStatusCodeValue(), "Response status should be 200 OK");
-        assertEquals(avgRating, response.getBody(), "Returned average rating should match");
-        verify(ratingService, times(1)).getAverageRatingByItemId(itemId);
+        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(avgRating, response.getBody());
     }
 
     @Test
-    void testDeleteRatingWithValidId() {
-        UUID validId = UUID.randomUUID();
+    void testGetRatingsByMejaId() {
+        UUID mejaId = sampleRating.getMejaId();
+        when(ratingService.findByMejaId(mejaId)).thenReturn(List.of(sampleRating));
 
-        ResponseEntity<Void> response = controller.deleteRating(validId);
+        ResponseEntity<List<Rating>> response = controller.getRatingsByMejaId(mejaId);
 
-        assertEquals(204, response.getStatusCodeValue(), "Should return 204 No Content for valid ID");
-        verify(ratingService, times(1)).deleteById(validId);
+        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(1, response.getBody().size());
+    }
+
+    @Test
+    void testDisableRatingsForMeja() {
+        UUID mejaId = sampleRating.getMejaId();
+
+        ResponseEntity<Void> response = controller.disableRatingsForMeja(mejaId);
+
+        assertEquals(200, response.getStatusCodeValue());
+        verify(ratingService, times(1)).disableUpdatesForMeja(mejaId);
+    }
+
+    @Test
+    void testCheckoutMeja() {
+        UUID mejaId = sampleRating.getMejaId();
+        UUID newMejaId = UUID.randomUUID();
+        when(ratingService.checkoutMeja(mejaId)).thenReturn(newMejaId);
+
+        ResponseEntity<Map<String, UUID>> response = controller.checkoutMeja(mejaId);
+
+        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(newMejaId, response.getBody().get("newMejaId"));
+    }
+
+    // --- UNHAPPY PATH ---
+
+    @Test
+    void testCreateNullRating() {
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            controller.createRating(null);
+        });
+        assertEquals("Rating must not be null", exception.getMessage());
+    }
+
+    @Test
+    void testDeleteRatingWithNullId() {
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            controller.deleteRating(null);
+        });
+        assertEquals("Rating ID must not be null", exception.getMessage());
+    }
+
+    @Test
+    void testGetRatingByIdNotFound() {
+        UUID notFoundId = UUID.randomUUID();
+        when(ratingService.findById(notFoundId)).thenReturn(Optional.empty());
+
+        ResponseEntity<Rating> response = controller.getRatingById(notFoundId);
+
+        assertEquals(404, response.getStatusCodeValue());
+        assertNull(response.getBody());
+    }
+
+    @Test
+    void testUpdateRatingWithMismatchedId() {
+        UUID pathId = UUID.randomUUID(); // berbeda dengan di body
+        sampleRating.setRatingId(UUID.randomUUID());
+
+        ResponseEntity<Rating> response = controller.updateRating(pathId, sampleRating);
+
+        assertEquals(400, response.getStatusCodeValue());
+        verify(ratingService, never()).update(any());
+    }
+
+    @Test
+    void testHandleRatingNotFoundException() {
+        String errorMessage = "Rating tidak ditemukan";
+        RatingNotFoundException exception = new RatingNotFoundException(errorMessage);
+
+        ResponseEntity<String> response = controller.handleRatingNotFoundException(exception);
+
+        assertEquals(404, response.getStatusCodeValue());
+        assertEquals(errorMessage, response.getBody());
     }
 }
