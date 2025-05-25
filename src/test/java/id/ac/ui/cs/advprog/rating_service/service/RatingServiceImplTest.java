@@ -26,7 +26,8 @@ class RatingServiceImplTest {
 
     @Mock
     private RatingObserver observer;
-
+    @Mock
+    private SessionManager sessionManager;
     @Mock
     private MenuServiceClient menuServiceClient;
 
@@ -40,7 +41,7 @@ class RatingServiceImplTest {
         rating.setMejaId(UUID.randomUUID());
         rating.setItemId(UUID.randomUUID());
         rating.setValue(4);
-
+        when(sessionManager.getCurrentSessionId()).thenReturn(UUID.randomUUID());
         ratingService.addObserver(observer); // daftarkan observer ke service
     }
 
