@@ -91,9 +91,7 @@ public class RatingController {
 
     @PutMapping("/meja/{mejaId}/checkout")
     public ResponseEntity<Map<String, UUID>> checkoutMeja(@PathVariable UUID mejaId) {
-        UUID newMejaId = ratingService.checkoutMeja(mejaId);
         Map<String, UUID> response = new HashMap<>();
-        response.put("newMejaId", newMejaId);
         return ResponseEntity.ok(response);
     }
 

@@ -17,5 +17,5 @@ public interface RatingService {
     List<Rating> findByItemIdAndMejaId(UUID itemId, UUID mejaId);
     void disableUpdatesForMeja(UUID mejaId);
     List<Rating> findByMejaId(UUID mejaId);
-    UUID checkoutMeja(UUID mejaId);
+    void checkoutMeja(UUID mejaId);
 }

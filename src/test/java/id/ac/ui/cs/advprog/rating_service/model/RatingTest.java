@@ -68,6 +68,19 @@ class RatingTest {
     }
 
     @Test
+    void testSetAndGetMejaId() {
+        assertEquals(mejaId, rating.getMejaId(), "Meja ID should match the assigned UUID");
+    }
+
+    @Test
+    void testSetNullMejaId() {
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            rating.setMejaId(null);
+        });
+        assertEquals("Meja ID cannot be null", exception.getMessage());
+    }
+
+    @Test
     void testSetAndGetCanUpdate() {
         rating.setCanUpdate(true);
         assertTrue(rating.isCanUpdate(), "canUpdate should be true");

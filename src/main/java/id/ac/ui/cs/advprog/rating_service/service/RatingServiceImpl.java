@@ -17,12 +17,10 @@ public class RatingServiceImpl implements RatingService, RatingSubject {
     private final RatingRepository ratingRepository;
     private final List<RatingObserver> observers = new ArrayList<>();
     private final MenuServiceClient menuServiceClient;
-    private final SessionManager sessionManager;
 
-    public RatingServiceImpl(RatingRepository ratingRepository, MenuServiceClient menuServiceClient, SessionManager sessionManager) {
+    public RatingServiceImpl(RatingRepository ratingRepository, MenuServiceClient menuServiceClient) {
         this.ratingRepository = ratingRepository;
         this.menuServiceClient = menuServiceClient;
-        this.sessionManager = sessionManager;
     }
 
     @Override
@@ -50,11 +48,16 @@ public class RatingServiceImpl implements RatingService, RatingSubject {
 
     @Override
     public Rating save(Rating rating) {
-        UUID mejaId = sessionManager.getCurrentSessionId();
-        rating.setMejaId(mejaId);
+        // Validate that mejaId is provided in the request
+        if (rating.getMejaId() == null) {
+            throw new IllegalArgumentException("mejaId must be provided");
+        }
+        
+        // Validate that the menu item exists
         if (menuServiceClient.getMenuItemById(rating.getItemId()) == null) {
             throw new IllegalArgumentException("Invalid itemId: item does not exist in MenuService");
         }
+        
         List<Rating> existing = ratingRepository.findByItemIdAndMejaId(rating.getItemId(), rating.getMejaId());
 
         Rating saved;
@@ -150,8 +153,7 @@ public class RatingServiceImpl implements RatingService, RatingSubject {
     }
 
     @Override
-    public UUID checkoutMeja(UUID mejaId) {
-        UUID newMejaId = UUID.randomUUID();
+    public void checkoutMeja(UUID mejaId) {
         // Ambil semua rating dengan mejaId tertentu, lalu matikan update-nya sekaligus save
         ratingRepository.findByMejaId(mejaId).stream()
                 .filter(Rating::isCanUpdate)
@@ -159,8 +161,5 @@ public class RatingServiceImpl implements RatingService, RatingSubject {
                     rating.setCanUpdate(false);
                     ratingRepository.save(rating);
                 });
-
-        // Kembalikan UUID baru sebagai meja/session baru
-        return newMejaId;
     }
 }

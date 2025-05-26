@@ -76,6 +76,23 @@ class RatingServiceImplTest {
     }
 
     @Test
+    void testSaveThrowsExceptionWhenMejaIdIsNull() {
+        UUID itemId = UUID.randomUUID();
+        Rating rating = new Rating();
+        rating.setRatingId(UUID.randomUUID());
+        rating.setMejaId(null); // mejaId is null
+        rating.setItemId(itemId);
+        rating.setValue(3);
+        rating.setCanUpdate(true);
+
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> ratingService.save(rating));
+
+        assertEquals("mejaId must be provided", exception.getMessage());
+        verify(menuServiceClient, never()).getMenuItemById(any());
+        verify(ratingRepository, never()).save(any());
+    }
+
+    @Test
     void testFindAll() {
         when(ratingRepository.findAll()).thenReturn(List.of(rating));
 
