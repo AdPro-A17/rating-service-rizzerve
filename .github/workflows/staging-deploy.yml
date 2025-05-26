@@ -36,7 +36,7 @@ jobs:
 
             # Step 2: Deploy latest staging code
             cd ~/rating-service-rizzerve
-            git pull --rebase origin staging
+            git pull origin staging
             ./gradlew bootJar
             docker stop rating-service || true
             docker rm rating-service || true
