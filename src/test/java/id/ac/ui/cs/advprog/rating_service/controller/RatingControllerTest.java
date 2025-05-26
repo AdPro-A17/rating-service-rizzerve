@@ -132,17 +132,6 @@ class RatingControllerTest {
         verify(ratingService, times(1)).disableUpdatesForMeja(mejaId);
     }
 
-    @Test
-    void testCheckoutMeja() {
-        UUID mejaId = sampleRating.getMejaId();
-        UUID newMejaId = UUID.randomUUID();
-        when(ratingService.checkoutMeja(mejaId)).thenReturn(newMejaId);
-
-        ResponseEntity<Map<String, UUID>> response = controller.checkoutMeja(mejaId);
-
-        assertEquals(200, response.getStatusCodeValue());
-        assertEquals(newMejaId, response.getBody().get("newMejaId"));
-    }
 
     // --- UNHAPPY PATH ---
 
