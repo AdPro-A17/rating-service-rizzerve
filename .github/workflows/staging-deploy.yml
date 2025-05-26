@@ -51,4 +51,4 @@ jobs:
               -e JWT_SECRET='${JWT_SECRET}' \
               -e FRONTEND_URL='${FRONTEND_URL}' \
               rating-service-rizzerve:latest
-          EOF   EOF
+          EOF
