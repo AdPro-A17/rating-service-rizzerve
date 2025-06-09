@@ -21,11 +21,18 @@ public class RatingServiceImpl implements RatingService, RatingSubject {
     private final RatingRepository ratingRepository;
     private final List<RatingObserver> observers = new ArrayList<>();
     private final MenuServiceClient menuServiceClient;
+    private final Counter ratingCreatedCounter;
+    private final Counter ratingDeletedCounter;
+    private final Timer ratingCreationTimer;
+    private final Timer ratingDeletionTimer;
 
-
-    public RatingServiceImpl(RatingRepository ratingRepository, MenuServiceClient menuServiceClient) {
+    public RatingServiceImpl(RatingRepository ratingRepository, MenuServiceClient menuServiceClient, MeterRegistry registry) {
         this.ratingRepository = ratingRepository;
         this.menuServiceClient = menuServiceClient;
+        this.ratingCreatedCounter = registry.counter("rating.created.count");
+        this.ratingDeletedCounter = registry.counter("rating.deleted.count");
+        this.ratingCreationTimer = registry.timer("rating.creation.time");
+        this.ratingDeletionTimer = registry.timer("rating.deletion.time");
     }
 
     @Override
@@ -53,35 +60,40 @@ public class RatingServiceImpl implements RatingService, RatingSubject {
 
     @Override
     public Rating save(Rating rating) {
-        // Validate that mejaId is provided in the request
-        if (rating.getMejaId() == null) {
-            throw new IllegalArgumentException("mejaId must be provided");
-        }
-        
-        // Validate that the menu item exists
-        if (menuServiceClient.getMenuItemById(rating.getItemId()) == null) {
-            throw new IllegalArgumentException("Invalid itemId: item does not exist in MenuService");
-        }
-        
-        List<Rating> existing = ratingRepository.findByItemIdAndMejaId(rating.getItemId(), rating.getMejaId());
-
-        Rating saved;
-        if (!existing.isEmpty()) {
-            Rating current = existing.get(0);
-            if (current.isCanUpdate()) {
-                current.setValue(rating.getValue());
-                saved = ratingRepository.save(current); // ID tetap
-            } else {
-                rating.setCanUpdate(true); // simpan rating baru
-                saved = ratingRepository.save(rating); // ID baru
+        long startTime = System.nanoTime();
+        try {
+            if (rating.getMejaId() == null) {
+                throw new IllegalArgumentException("mejaId must be provided");
             }
-        } else {
-            rating.setCanUpdate(true);
-            saved = ratingRepository.save(rating);
-        }
 
-        notifyObservers(saved.getItemId());
-        return saved;
+            if (menuServiceClient.getMenuItemById(rating.getItemId()) == null) {
+                throw new IllegalArgumentException("Invalid itemId: item does not exist in MenuService");
+            }
+
+            List<Rating> existing = ratingRepository.findByItemIdAndMejaId(rating.getItemId(), rating.getMejaId());
+
+            Rating saved;
+            if (!existing.isEmpty()) {
+                Rating current = existing.get(0);
+                if (current.isCanUpdate()) {
+                    current.setValue(rating.getValue());
+                    saved = ratingRepository.save(current);
+                } else {
+                    rating.setCanUpdate(true);
+                    saved = ratingRepository.save(rating);
+                }
+            } else {
+                rating.setCanUpdate(true);
+                saved = ratingRepository.save(rating);
+            }
+
+            notifyObservers(saved.getItemId());
+            ratingCreatedCounter.increment();
+            return saved;
+        } finally {
+            long endTime = System.nanoTime();
+            ratingCreationTimer.record(endTime - startTime, java.util.concurrent.TimeUnit.NANOSECONDS);
+        }
     }
 
     @Override
@@ -106,20 +118,28 @@ public class RatingServiceImpl implements RatingService, RatingSubject {
         return updatedRating;
     }
 
+
     @Override
     public void deleteById(UUID id) {
-        Optional<Rating> ratingOpt = ratingRepository.findById(id);
-        if (ratingOpt.isEmpty()) {
-            throw new RatingNotFoundException("Rating dengan ID " + id + " tidak ditemukan");
-        }
+        long startTime = System.nanoTime();
+        try {
+            Optional<Rating> ratingOpt = ratingRepository.findById(id);
+            if (ratingOpt.isEmpty()) {
+                throw new RatingNotFoundException("Rating dengan ID " + id + " tidak ditemukan");
+            }
 
-        Rating rating = ratingOpt.get();
-        if (!rating.isCanUpdate()) {
-            throw new IllegalStateException("Rating sudah tidak bisa dihapus karena sudah checkout");
-        }
+            Rating rating = ratingOpt.get();
+            if (!rating.isCanUpdate()) {
+                throw new IllegalStateException("Rating sudah tidak bisa dihapus karena sudah checkout");
+            }
 
-        ratingRepository.deleteById(id);
-        notifyObservers(rating.getItemId());
+            ratingRepository.deleteById(id);
+            notifyObservers(rating.getItemId());
+            ratingDeletedCounter.increment();
+        } finally {
+            long endTime = System.nanoTime();
+            ratingDeletionTimer.record(endTime - startTime, java.util.concurrent.TimeUnit.NANOSECONDS);
+        }
     }
 
     @Override

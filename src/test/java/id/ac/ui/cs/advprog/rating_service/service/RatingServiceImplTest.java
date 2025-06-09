@@ -4,15 +4,16 @@ import id.ac.ui.cs.advprog.rating_service.exception.RatingNotFoundException;
 import id.ac.ui.cs.advprog.rating_service.model.Rating;
 import id.ac.ui.cs.advprog.rating_service.observer.RatingObserver;
 import id.ac.ui.cs.advprog.rating_service.repository.RatingRepository;
+import io.micrometer.core.instrument.Counter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
 import id.ac.ui.cs.advprog.rating_service.client.MenuServiceClient;
 import id.ac.ui.cs.advprog.rating_service.dto.MenuItemDTO;
 import org.springframework.http.ResponseEntity;
-
+import io.micrometer.core.instrument.MeterRegistry;
 import java.util.*;
-
+import io.micrometer.core.instrument.Timer;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -31,11 +32,34 @@ class RatingServiceImplTest {
     @Mock
     private MenuServiceClient menuServiceClient;
 
+    @Mock
+    private MeterRegistry meterRegistry;
+
+    @Mock
+    private Timer ratingCreationTimer;
+
+    @Mock
+    private Timer ratingDeletionTimer;
+
+    @Mock
+    private Counter ratingCreatedCounter;
+
+    @Mock
+    private Counter ratingDeletedCounter;
+
     private Rating rating;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
+        when(meterRegistry.counter("rating.created.count")).thenReturn(ratingCreatedCounter);
+        when(meterRegistry.counter("rating.deleted.count")).thenReturn(ratingDeletedCounter);
+
+        when(meterRegistry.timer("rating.creation.time")).thenReturn(ratingCreationTimer);
+        when(meterRegistry.timer("rating.deletion.time")).thenReturn(ratingDeletionTimer);
+
+        doNothing().when(ratingCreationTimer).record(anyLong(), any());
+        doNothing().when(ratingDeletionTimer).record(anyLong(), any());
         rating = new Rating();
         rating.setRatingId(UUID.randomUUID());
         rating.setMejaId(UUID.randomUUID());
@@ -43,6 +67,15 @@ class RatingServiceImplTest {
         rating.setValue(4);
         when(sessionManager.getCurrentSessionId()).thenReturn(UUID.randomUUID());
         ratingService.addObserver(observer); // daftarkan observer ke service
+
+        when(meterRegistry.counter("rating.created.count")).thenReturn(ratingCreatedCounter);
+        when(meterRegistry.counter("rating.deleted.count")).thenReturn(ratingDeletedCounter);
+
+        when(meterRegistry.timer("rating.creation.time")).thenReturn(ratingCreationTimer);
+        when(meterRegistry.timer("rating.deletion.time")).thenReturn(ratingDeletionTimer);
+
+        doNothing().when(ratingCreationTimer).record(anyLong(), any());
+        doNothing().when(ratingDeletionTimer).record(anyLong(), any());
     }
 
     @Test
@@ -59,7 +92,7 @@ class RatingServiceImplTest {
         RatingObserver observer = mock(RatingObserver.class);
         ratingService.addObserver(observer);
 
-        // ✅ Mock respons dari menuServiceClient agar itemId valid
+        // Mock respons dari menuServiceClient agar itemId valid
         MenuServiceClient.MenuItemResponse mockItem = new MenuServiceClient.MenuItemResponse();
         mockItem.setId(itemId);
         mockItem.setName("Nasi Goreng");

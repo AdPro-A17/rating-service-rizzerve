@@ -6,7 +6,7 @@ import id.ac.ui.cs.advprog.rating_service.repository.RatingRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
-
+import io.micrometer.core.instrument.MeterRegistry;
 import java.util.List;
 import java.util.UUID;
 
@@ -19,7 +19,8 @@ public class RatingSubjectTest {
 
     @Mock
     private RatingObserver mockObserver;
-
+    @Mock
+    private MeterRegistry meterRegistry;
     @InjectMocks
     private RatingServiceImpl ratingService;
 
