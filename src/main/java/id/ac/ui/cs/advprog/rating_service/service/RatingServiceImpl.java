@@ -8,6 +8,10 @@ import id.ac.ui.cs.advprog.rating_service.observer.RatingSubject;
 import id.ac.ui.cs.advprog.rating_service.repository.RatingRepository;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
+
 
 import java.util.*;
 
@@ -17,6 +21,7 @@ public class RatingServiceImpl implements RatingService, RatingSubject {
     private final RatingRepository ratingRepository;
     private final List<RatingObserver> observers = new ArrayList<>();
     private final MenuServiceClient menuServiceClient;
+
 
     public RatingServiceImpl(RatingRepository ratingRepository, MenuServiceClient menuServiceClient) {
         this.ratingRepository = ratingRepository;
